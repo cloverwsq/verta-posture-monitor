@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VertA - Smart Posture Cushion</title>
+    
+    <!-- External Libraries -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    
+    <!-- Project Styles -->
+    <link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <nav class="nav container">
+            <div class="logo">VertA</div>
+            <div class="nav-links">
+                <a href="#dashboard">Dashboard</a>
+                <a href="#analytics">Analytics</a>
+                <a href="#ml-model">AI Model</a>
+                <a href="#settings">Settings</a>
+                <button class="login-btn" onclick="openAuthModal('login')">Login</button>
+                <button class="register-btn" onclick="openAuthModal('register')">Sign Up</button>
+            </div>
+        </nav>
+    </header>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="particles" id="particles"></div>
+        <div class="container hero-content">
+            <div class="hero-text">
+                <h1>Smart Posture <span class="gradient-text">Revolution</span></h1>
+                <p>VertA uses advanced sensors and AI to monitor your sitting posture in real-time, delivering gentle vibration alerts to help you maintain perfect alignment throughout your day.</p>
+                <a href="#dashboard" class="cta-button">View Live Dashboard</a>
+            </div>
+            <div class="hero-viz">
+                <canvas id="three-canvas"></canvas>
+            </div>
+        </div>
+    </section>
+
+    <!-- Stats Section -->
+    <section class="container">
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-number" id="uptime">2847</div>
+                <div class="stat-label">Minutes Today</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="posture-score">87</div>
+                <div class="stat-label">Posture Score</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="alerts-count">12</div>
+                <div class="stat-label">Gentle Reminders</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="streak">15</div>
+                <div class="stat-label">Day Streak</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Dashboard Section -->
+    <section class="dashboard" id="dashboard">
+        <div class="container">
+            <h2>Live <span class="gradient-text">Dashboard</span></h2>
+            
+            <div class="dashboard-grid">
+                <!-- Real-time Status -->
+                <div class="dashboard-card">
+                    <div class="card-header">
+                        <div class="card-icon">📊</div>
+                        <div class="card-title">Current Status</div>
+                    </div>
+                    <div style="margin: 20px 0;">
+                        <div style="margin-bottom: 15px;">
+                            <span class="status-indicator status-good"></span>
+                            <strong>Posture: Excellent</strong>
+                        </div>
+                        <div style="margin-bottom: 15px;">
+                            <span class="status-indicator status-good"></span>
+                            <strong>Device: Connected</strong>
+                        </div>
+                        <div>
+                            <span class="status-indicator status-warning"></span>
+                            <strong>Battery: 72%</strong>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Improved Posture Timeline -->
+                <div class="dashboard-card timeline-card" style="grid-column: span 2;">
+                    <div class="card-header">
+                        <div class="card-icon">📈</div>
+                        <div style="flex: 1;">
+                            <div class="card-title">Posture Timeline</div>
+                            <div class="timeline-subtitle">Track your posture throughout the day</div>
+                        </div>
+                    </div>
+                    
+                    <!-- Timeline will be populated by JavaScript -->
+                    <canvas id="posture-chart" width="400" height="200"></canvas>
+                </div>
+
+                <!-- Pressure Heatmap -->
+                <div class="dashboard-card">
+                    <div class="card-header">
+                        <div class="card-icon">🌡️</div>
+                        <div class="card-title">Pressure Heatmap</div>
+                    </div>
+                    <div id="pressure-grid" style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 5px; margin-top: 20px;">
+                        <!-- Pressure sensors will be populated by JavaScript -->
+                    </div>
+                </div>
+
+                <!-- Weekly Progress -->
+                <div class="dashboard-card">
+                    <div class="card-header">
+                        <div class="card-icon">🏆</div>
+                        <div class="card-title">Weekly Progress</div>
+                    </div>
+                    <canvas id="weekly-chart" width="300" height="200"></canvas>
+                </div>
+
+                <!-- Achievement System -->
+                <div class="dashboard-card">
+                    <div class="card-header">
+                        <div class="card-icon">🎯</div>
+                        <div class="card-title">Achievements</div>
+                    </div>
+                    <div style="margin-top: 20px;">
+                        <div style="margin-bottom: 15px; padding: 10px; background: rgba(78, 205, 196, 0.2); border-radius: 8px;">
+                            <strong>🔥 Perfect Week!</strong><br>
+                            <small>7 days of good posture</small>
+                        </div>
+                        <div style="margin-bottom: 15px; padding: 10px; background: rgba(255, 107, 107, 0.2); border-radius: 8px;">
+                            <strong>⚡ Quick Responder</strong><br>
+                            <small>Fixed posture in under 5s</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ML Model Section -->
+    <section class="ml-section" id="ml-model">
+        <div class="container">
+            <h2>AI-Powered <span class="gradient-text">Posture Detection</span></h2>
+            <div class="ml-placeholder">
+                <h3>🧠 ML Model Integration Ready</h3>
+                <p>This section is prepared for your machine learning model integration. Current demo uses simulated data patterns.</p>
+                <div style="margin-top: 30px; padding: 20px; background: rgba(255, 255, 255, 0.1); border-radius: 10px;">
+                    <strong>Model Specifications:</strong><br>
+                    • Input: 5x5 pressure sensor grid (25 values)<br>
+                    • Output: Posture classification (Good/Slouching/Leaning/Crossed)<br>
+                    • Inference Time: &lt;50ms<br>
+                    • Confidence Threshold: 85%
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Authentication Modal -->
+    <div class="auth-modal" id="authModal">
+        <div class="auth-modal-content">
+            <button class="auth-close" onclick="closeAuthModal()">&times;</button>
+            
+            <!-- Login Form -->
+            <div class="auth-form-container" id="loginForm">
+                <div class="auth-header">
+                    <div class="logo">VertA</div>
+                    <h2>Welcome Back</h2>
+                    <p>Sign in to your posture tracking dashboard</p>
+                </div>
+                
+                <form class="auth-form" onsubmit="handleLogin(event)">
+                    <div class="form-group">
+                        <label for="loginEmail">Email Address</label>
+                        <input type="email" id="loginEmail" required placeholder="your@email.com">
+                        <div class="form-icon">📧</div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="loginPassword">Password</label>
+                        <input type="password" id="loginPassword" required placeholder="Your password">
+                        <div class="form-icon">🔒</div>
+                        <button type="button" class="password-toggle" onclick="togglePassword('loginPassword')">👁️</button>
+                    </div>
+
+                    <div class="form-options">
+                        <label class="checkbox">
+                            <input type="checkbox" id="rememberMe">
+                            <span class="checkmark"></span>
+                            Remember me
+                        </label>
+                        <a href="#" class="forgot-password" onclick="handleForgotPassword()">Forgot password?</a>
+                    </div>
+
+                    <button type="submit" class="auth-button">Sign In</button>
+                    
+                    <div class="divider"><span>or</span></div>
+
+                    <div class="social-login">
+                        <button type="button" class="social-button google" onclick="socialLogin('google')">
+                            <span class="social-icon">🔍</span>
+                            Continue with Google
+                        </button>
+                        <button type="button" class="social-button apple" onclick="socialLogin('apple')">
+                            <span class="social-icon">🍎</span>
+                            Continue with Apple
+                        </button>
+                    </div>
+
+                    <div class="auth-switch">
+                        <p>Don't have an account? <a href="#" onclick="switchToRegister()">Sign up</a></p>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Register Form -->
+            <div class="auth-form-container hidden" id="registerForm">
+                <div class="auth-header">
+                    <div class="logo">VertA</div>
+                    <h2>Join VertA</h2>
+                    <p>Create your account and start improving your posture today</p>
+                </div>
+                
+                <form class="auth-form" onsubmit="handleRegister(event)">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="firstName">First Name</label>
+                            <input type="text" id="firstName" required placeholder="John">
+                            <div class="form-icon">👤</div>
+                        </div>
+                        <div class="form-group">
+                            <label for="lastName">Last Name</label>
+                            <input type="text" id="lastName" required placeholder="Doe">
+                            <div class="form-icon">👤</div>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="registerEmail">Email Address</label>
+                        <input type="email" id="registerEmail" required placeholder="your@email.com">
+                        <div class="form-icon">📧</div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="registerPassword">Password</label>
+                        <input type="password" id="registerPassword" required placeholder="Create a strong password" oninput="checkPasswordStrength(this.value)">
+                        <div class="form-icon">🔒</div>
+                        <button type="button" class="password-toggle" onclick="togglePassword('registerPassword')">👁️</button>
+                        <div class="password-strength" id="passwordStrength">
+                            <div class="strength-bar">
+                                <div class="strength-fill" id="strengthFill"></div>
+                            </div>
+                            <span class="strength-text" id="strengthText">Password strength</span>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="confirmPassword">Confirm Password</label>
+                        <input type="password" id="confirmPassword" required placeholder="Confirm your password">
+                        <div class="form-icon">🔒</div>
+                        <button type="button" class="password-toggle" onclick="togglePassword('confirmPassword')">👁️</button>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="deviceId">VertA Device ID (Optional)</label>
+                        <input type="text" id="deviceId" placeholder="VTA-XXXXXXXX">
+                        <div class="form-icon">📱</div>
+                        <small>Found on the back of your VertA cushion</small>
+                    </div>
+
+                    <div class="form-options">
+                        <label class="checkbox">
+                            <input type="checkbox" id="terms" required>
+                            <span class="checkmark"></span>
+                            I agree to the <a href="#" target="_blank">Terms of Service</a> and <a href="#" target="_blank">Privacy Policy</a>
+                        </label>
+                    </div>
+
+                    <div class="form-options">
+                        <label class="checkbox">
+                            <input type="checkbox" id="newsletter">
+                            <span class="checkmark"></span>
+                            Send me posture tips and product updates
+                        </label>
+                    </div>
+
+                    <button type="submit" class="auth-button">Create Account</button>
+                    
+                    <div class="divider"><span>or</span></div>
+
+                    <div class="social-login">
+                        <button type="button" class="social-button google" onclick="socialLogin('google')">
+                            <span class="social-icon">🔍</span>
+                            Sign up with Google
+                        </button>
+                        <button type="button" class="social-button apple" onclick="socialLogin('apple')">
+                            <span class="social-icon">🍎</span>
+                            Sign up with Apple
+                        </button>
+                    </div>
+
+                    <div class="auth-switch">
+                        <p>Already have an account? <a href="#" onclick="switchToLogin()">Sign in</a></p>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- User Profile Dropdown (shown when logged in) -->
+    <div class="user-profile hidden" id="userProfile">
+        <div class="profile-avatar" onclick="toggleProfileDropdown()">
+            <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=user" alt="Profile" id="profileAvatar">
+        </div>
+        <div class="profile-dropdown hidden" id="profileDropdown">
+            <div class="profile-info">
+                <div class="profile-name" id="profileName">John Doe</div>
+                <div class="profile-email" id="profileEmail">john@example.com</div>
+            </div>
+            <hr>
+            <a href="#" onclick="showProfile()">👤 My Profile</a>
+            <a href="#" onclick="showSettings()">⚙️ Settings</a>
+            <a href="#" onclick="showNotifications()">🔔 Notifications</a>
+            <hr>
+            <a href="#" onclick="handleLogout()">🚪 Sign Out</a>
+        </div>
+    </div>
+
+    <!-- Notification Toast -->
+    <div class="notification toast" id="notificationToast">
+        <div class="toast-content">
+            <span class="toast-icon" id="toastIcon">✅</span>
+            <span class="toast-message" id="toastMessage">Success message</span>
+        </div>
+        <button class="toast-close" onclick="closeToast()">&times;</button>
+    </div>
+
+    <!-- Project Scripts -->
+    <script src="assets/data/mock-data.js"></script>
+    <script src="assets/js/ml-interface.js"></script>
+    <script src="assets/js/3d-viz.js"></script>
+    <script src="assets/js/charts.js"></script>
+    <script src="assets/js/pressure-grid.js"></script>
+    <script src="assets/js/improved-timeline.js"></script>
+    <script src="assets/js/auth.js"></script>
+    <script src="assets/js/main.js"></script>
+</body>
+</html>

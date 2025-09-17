@@ -1,0 +1,423 @@
+/**
+ * VertA Pressure Grid Visualization
+ */
+
+let pressureGridCells = [];
+let gridAnimationFrame = null;
+
+function initPressureGrid() {
+    const grid = document.getElementById('pressure-grid');
+    if (!grid) {
+        console.warn('Pressure grid container not found');
+        return;
+    }
+
+    // 清空现有内容
+    grid.innerHTML = '';
+    pressureGridCells = [];
+    
+    // 创建25个传感器单元格（5x5网格）
+    for (let i = 0; i < 25; i++) {
+        const cell = document.createElement('div');
+        cell.className = 'pressure-cell';
+        cell.dataset.index = i;
+        cell.dataset.row = Math.floor(i / 5);
+        cell.dataset.col = i % 5;
+        
+        cell.style.cssText = `
+            aspect-ratio: 1;
+            border-radius: 6px;
+            background: rgba(78, 205, 196, 0.3);
+            transition: all 0.3s ease;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            position: relative;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.7rem;
+            font-weight: 600;
+            color: rgba(255, 255, 255, 0.8);
+        `;
+        
+        // 添加传感器标识
+        const sensorId = document.createElement('span');
+        sensorId.textContent = i + 1;
+        sensorId.style.cssText = `
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            font-size: 0.6rem;
+        `;
+        cell.appendChild(sensorId);
+        
+        // 添加交互效果
+        addCellInteractions(cell, i);
+        
+        grid.appendChild(cell);
+        pressureGridCells.push({
+            element: cell,
+            sensorId: sensorId,
+            index: i,
+            row: Math.floor(i / 5),
+            col: i % 5,
+            lastValue: 0
+        });
+    }
+
+    // 启动压力网格动画
+    startPressureAnimation();
+    
+    console.log('🌡️ Pressure grid initialized with 25 sensors');
+}
+
+function addCellInteractions(cell, index) {
+    // 鼠标悬停效果
+    cell.addEventListener('mouseenter', () => {
+        cell.style.transform = 'scale(1.1)';
+        cell.style.zIndex = '10';
+        cell.style.boxShadow = '0 4px 15px rgba(78, 205, 196, 0.4)';
+        
+        // 显示传感器编号
+        const sensorId = cell.querySelector('span');
+        if (sensorId) sensorId.style.opacity = '1';
+        
+        // 显示详细信息
+        showSensorTooltip(cell, index);
+    });
+    
+    cell.addEventListener('mouseleave', () => {
+        cell.style.transform = 'scale(1)';
+        cell.style.zIndex = '1';
+        cell.style.boxShadow = 'none';
+        
+        // 隐藏传感器编号
+        const sensorId = cell.querySelector('span');
+        if (sensorId) sensorId.style.opacity = '0';
+        
+        // 隐藏提示
+        hideTooltip();
+    });
+    
+    // 点击效果
+    cell.addEventListener('click', () => {
+        highlightSensor(index);
+    });
+}
+
+function showSensorTooltip(cell, index) {
+    // 创建或更新工具提示
+    let tooltip = document.getElementById('sensorTooltip');
+    if (!tooltip) {
+        tooltip = document.createElement('div');
+        tooltip.id = 'sensorTooltip';
+        tooltip.style.cssText = `
+            position: absolute;
+            background: rgba(0, 0, 0, 0.9);
+            color: white;
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: 0.8rem;
+            pointer-events: none;
+            z-index: 1000;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(78, 205, 196, 0.3);
+        `;
+        document.body.appendChild(tooltip);
+    }
+    
+    const rect = cell.getBoundingClientRect();
+    const value = getCurrentSensorValue(index);
+    const row = Math.floor(index / 5) + 1;
+    const col = (index % 5) + 1;
+    
+    tooltip.innerHTML = `
+        <strong>Sensor ${index + 1}</strong><br>
+        Position: Row ${row}, Col ${col}<br>
+        Pressure: ${(value * 100).toFixed(1)}%<br>
+        Status: ${getPressureStatus(value)}
+    `;
+    
+    tooltip.style.left = rect.right + 10 + 'px';
+    tooltip.style.top = rect.top + 'px';
+    tooltip.style.display = 'block';
+}
+
+function hideTooltip() {
+    const tooltip = document.getElementById('sensorTooltip');
+    if (tooltip) {
+        tooltip.style.display = 'none';
+    }
+}
+
+function getCurrentSensorValue(index) {
+    if (window.vertaApp && window.vertaApp.sensorData) {
+        return window.vertaApp.sensorData[index] || 0;
+    }
+    return pressureGridCells[index]?.lastValue || 0;
+}
+
+function getPressureStatus(value) {
+    if (value > 0.8) return '🔴 High';
+    if (value > 0.5) return '🟡 Medium';
+    if (value > 0.2) return '🟢 Low';
+    return '⚪ None';
+}
+
+function highlightSensor(index) {
+    // 重置所有传感器
+    pressureGridCells.forEach(cell => {
+        cell.element.classList.remove('highlighted');
+    });
+    
+    // 高亮选中的传感器
+    const cell = pressureGridCells[index];
+    if (cell) {
+        cell.element.classList.add('highlighted');
+        cell.element.style.animation = 'pulseHighlight 0.6s ease-in-out';
+        
+        // 显示传感器详细信息
+        if (window.showToast) {
+            const value = getCurrentSensorValue(index);
+            const row = Math.floor(index / 5) + 1;
+            const col = (index % 5) + 1;
+            window.showToast(
+                `Sensor ${index + 1} (${row},${col}): ${(value * 100).toFixed(1)}% pressure`, 
+                'info', 
+                3000
+            );
+        }
+        
+        setTimeout(() => {
+            cell.element.style.animation = '';
+        }, 600);
+    }
+}
+
+function startPressureAnimation() {
+    function animate() {
+        updatePressureGridVisualization();
+        gridAnimationFrame = requestAnimationFrame(animate);
+    }
+    animate();
+}
+
+function stopPressureAnimation() {
+    if (gridAnimationFrame) {
+        cancelAnimationFrame(gridAnimationFrame);
+        gridAnimationFrame = null;
+    }
+}
+
+function updatePressureGridVisualization() {
+    const grid = document.getElementById('pressure-grid');
+    if (!grid || pressureGridCells.length === 0) return;
+
+    // 获取传感器数据
+    let sensorData;
+    if (window.vertaApp && window.vertaApp.sensorData) {
+        sensorData = window.vertaApp.sensorData;
+    } else {
+        // 使用模拟数据
+        sensorData = window.generateMockSensorData ? 
+            window.generateMockSensorData('good') : 
+            generateDefaultSensorData();
+    }
+    
+    // 更新每个单元格
+    pressureGridCells.forEach((cellInfo, i) => {
+        if (i >= sensorData.length) return;
+        
+        const cell = cellInfo.element;
+        const intensity = Math.max(0, Math.min(1, sensorData[i] || 0));
+        cellInfo.lastValue = intensity;
+        
+        // 计算颜色 (从蓝色到红色的热图)
+        const hue = (1 - intensity) * 240; // 240度是蓝色，0度是红色
+        const saturation = 70 + intensity * 30; // 饱和度
+        const lightness = 30 + intensity * 40; // 亮度
+        
+        cell.style.background = `hsl(${hue}, ${saturation}%, ${lightness}%)`;
+        
+        // 添加脉动效果
+        const pulse = 0.9 + intensity * 0.2;
+        if (!cell.style.transform.includes('scale(1.1)')) { // 不干扰hover效果
+            cell.style.transform = `scale(${pulse})`;
+        }
+        
+        // 更新边框和阴影
+        if (intensity > 0.7) {
+            cell.style.border = '2px solid rgba(255, 255, 255, 0.6)';
+            cell.style.boxShadow = `0 0 12px hsla(${hue}, ${saturation}%, ${lightness}%, 0.6)`;
+        } else if (intensity > 0.4) {
+            cell.style.border = '1px solid rgba(255, 255, 255, 0.4)';
+            cell.style.boxShadow = `0 0 6px hsla(${hue}, ${saturation}%, ${lightness}%, 0.3)`;
+        } else {
+            cell.style.border = '1px solid rgba(255, 255, 255, 0.1)';
+            cell.style.boxShadow = 'none';
+        }
+        
+        // 更新传感器编号颜色
+        const sensorId = cell.querySelector('span');
+        if (sensorId) {
+            sensorId.style.color = intensity > 0.5 ? '#ffffff' : 'rgba(255, 255, 255, 0.8)';
+        }
+    });
+}
+
+function generateDefaultSensorData() {
+    // 生成默认的传感器数据模式
+    const time = Date.now() / 2000;
+    const data = [];
+    
+    for (let i = 0; i < 25; i++) {
+        const row = Math.floor(i / 5);
+        const col = i % 5;
+        
+        // 创建中心偏重的压力分布
+        const centerDistance = Math.sqrt(Math.pow(row - 2, 2) + Math.pow(col - 2, 2));
+        const centerWeight = Math.exp(-centerDistance * 0.5);
+        
+        // 添加时间变化
+        const timeVariation = Math.sin(time + i * 0.2) * 0.3;
+        
+        let value = centerWeight * 0.7 + timeVariation + 0.2;
+        value = Math.max(0, Math.min(1, value));
+        
+        data.push(value);
+    }
+    
+    return data;
+}
+
+// 压力网格分析功能
+function analyzePressureDistribution() {
+    if (!window.vertaApp || !window.vertaApp.sensorData) {
+        return null;
+    }
+    
+    const data = window.vertaApp.sensorData;
+    let totalPressure = 0;
+    let maxPressure = 0;
+    let minPressure = Infinity;
+    let centerOfPressure = { x: 0, y: 0 };
+    
+    // 计算统计信息
+    for (let i = 0; i < 25; i++) {
+        const pressure = data[i] || 0;
+        const row = Math.floor(i / 5);
+        const col = i % 5;
+        
+        totalPressure += pressure;
+        maxPressure = Math.max(maxPressure, pressure);
+        minPressure = Math.min(minPressure, pressure);
+        
+        centerOfPressure.x += pressure * col;
+        centerOfPressure.y += pressure * row;
+    }
+    
+    if (totalPressure > 0) {
+        centerOfPressure.x /= totalPressure;
+        centerOfPressure.y /= totalPressure;
+    }
+    
+    // 计算对称性
+    let leftSidePressure = 0;
+    let rightSidePressure = 0;
+    
+    for (let i = 0; i < 25; i++) {
+        const col = i % 5;
+        const pressure = data[i] || 0;
+        
+        if (col < 2) leftSidePressure += pressure;
+        if (col > 2) rightSidePressure += pressure;
+    }
+    
+    const asymmetryRatio = Math.abs(leftSidePressure - rightSidePressure) / 
+                          (leftSidePressure + rightSidePressure);
+    
+    return {
+        totalPressure: totalPressure.toFixed(2),
+        averagePressure: (totalPressure / 25).toFixed(3),
+        maxPressure: maxPressure.toFixed(3),
+        minPressure: minPressure === Infinity ? 0 : minPressure.toFixed(3),
+        centerOfPressure: {
+            x: centerOfPressure.x.toFixed(2),
+            y: centerOfPressure.y.toFixed(2)
+        },
+        asymmetryRatio: asymmetryRatio.toFixed(3),
+        symmetryStatus: asymmetryRatio < 0.1 ? 'Good' : asymmetryRatio < 0.2 ? 'Fair' : 'Poor'
+    };
+}
+
+// 重置网格显示
+function resetPressureGrid() {
+    pressureGridCells.forEach(cellInfo => {
+        const cell = cellInfo.element;
+        cell.style.background = 'rgba(78, 205, 196, 0.3)';
+        cell.style.border = '1px solid rgba(255, 255, 255, 0.1)';
+        cell.style.boxShadow = 'none';
+        cell.style.transform = 'scale(1)';
+        cell.classList.remove('highlighted');
+        cellInfo.lastValue = 0;
+    });
+}
+
+// 设置网格主题
+function setPressureGridTheme(theme = 'default') {
+    const themes = {
+        default: { base: 'rgba(78, 205, 196, 0.3)', accent: '#4ecdc4' },
+        fire: { base: 'rgba(255, 107, 107, 0.3)', accent: '#ff6b6b' },
+        ice: { base: 'rgba(107, 178, 255, 0.3)', accent: '#6bb2ff' },
+        forest: { base: 'rgba(107, 255, 107, 0.3)', accent: '#6bff6b' }
+    };
+    
+    const selectedTheme = themes[theme] || themes.default;
+    
+    pressureGridCells.forEach(cellInfo => {
+        cellInfo.element.style.background = selectedTheme.base;
+    });
+}
+
+// 添加必要的CSS动画
+function addPressureGridStyles() {
+    if (document.getElementById('pressureGridStyles')) return;
+    
+    const style = document.createElement('style');
+    style.id = 'pressureGridStyles';
+    style.textContent = `
+        @keyframes pulseHighlight {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.2); box-shadow: 0 0 20px rgba(78, 205, 196, 0.8); }
+            100% { transform: scale(1); }
+        }
+        
+        .pressure-cell.highlighted {
+            border: 2px solid #4ecdc4 !important;
+            z-index: 15 !important;
+        }
+        
+        .pressure-cell {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        .pressure-cell:hover {
+            transition: all 0.2s ease !important;
+        }
+    `;
+    document.head.appendChild(style);
+}
+
+// 初始化时添加样式
+addPressureGridStyles();
+
+// 导出函数
+window.initPressureGrid = initPressureGrid;
+window.updatePressureGridVisualization = updatePressureGridVisualization;
+window.analyzePressureDistribution = analyzePressureDistribution;
+window.resetPressureGrid = resetPressureGrid;
+window.setPressureGridTheme = setPressureGridTheme;
+window.highlightSensor = highlightSensor;
+window.startPressureAnimation = startPressureAnimation;
+window.stopPressureAnimation = stopPressureAnimation;
+
+console.log('🌡️ Pressure grid module loaded');
