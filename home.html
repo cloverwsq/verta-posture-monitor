@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VertA - Smart Posture Cushion</title>
+    
+    <!-- External Libraries -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    
+    <!-- Project Styles -->
+    <link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <nav class="nav container">
+            <div class="logo">VertA</div>
+            <div class="nav-links">
+                <a href="#features">Features</a>
+                <a href="#how-it-works">How It Works</a>
+                <a href="#pricing">Pricing</a>
+                <button class="login-btn" onclick="openAuthModal('login')">Login</button>
+                <button class="register-btn" onclick="openAuthModal('register')">Sign Up</button>
+            </div>
+        </nav>
+    </header>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="particles" id="particles"></div>
+        <div class="container hero-content">
+            <div class="hero-text">
+                <h1>Smart Posture <span class="gradient-text">Revolution</span></h1>
+                <p>VertA uses advanced sensors and AI to monitor your sitting posture in real-time, delivering gentle vibration alerts to help you maintain perfect alignment throughout your day.</p>
+                <div class="hero-buttons">
+                    <button class="cta-button" onclick="openAuthModal('register')">Get Started</button>
+                    <button class="cta-button-secondary" onclick="showDemo()">Watch Demo</button>
+                </div>
+            </div>
+            <div class="hero-viz">
+                <canvas id="three-canvas"></canvas>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section class="features" id="features">
+        <div class="container">
+            <h2>Why Choose <span class="gradient-text">VertA</span>?</h2>
+            <div class="features-grid">
+                <div class="feature-card">
+                    <div class="feature-icon">🎯</div>
+                    <h3>Real-Time Monitoring</h3>
+                    <p>25 pressure sensors track your posture continuously, providing instant feedback on your sitting position.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">🧠</div>
+                    <h3>AI-Powered Analysis</h3>
+                    <p>Advanced machine learning algorithms classify your posture and provide personalized recommendations.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">📊</div>
+                    <h3>Detailed Analytics</h3>
+                    <p>Track your progress with comprehensive charts, trends, and achievement systems.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">🔔</div>
+                    <h3>Gentle Reminders</h3>
+                    <p>Subtle vibration alerts help you correct your posture without disrupting your workflow.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- How It Works Section -->
+    <section class="how-it-works" id="how-it-works">
+        <div class="container">
+            <h2>How <span class="gradient-text">VertA</span> Works</h2>
+            <div class="steps-grid">
+                <div class="step">
+                    <div class="step-number">1</div>
+                    <h3>Place & Connect</h3>
+                    <p>Simply place the VertA cushion on your chair and connect it to your device via Bluetooth.</p>
+                </div>
+                <div class="step">
+                    <div class="step-number">2</div>
+                    <h3>Monitor & Learn</h3>
+                    <p>The AI system learns your sitting patterns and identifies areas for improvement.</p>
+                </div>
+                <div class="step">
+                    <div class="step-number">3</div>
+                    <h3>Improve & Track</h3>
+                    <p>Receive gentle reminders and track your progress toward better posture habits.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Authentication Modal -->
+    <div class="auth-modal" id="authModal">
+        <div class="auth-modal-content">
+            <button class="auth-close" onclick="closeAuthModal()">&times;</button>
+            
+            <!-- Login Form -->
+            <div class="auth-form-container" id="loginForm">
+                <div class="auth-header">
+                    <div class="logo">VertA</div>
+                    <h2>Welcome Back</h2>
+                    <p>Sign in to your posture tracking dashboard</p>
+                </div>
+                
+                <form class="auth-form" onsubmit="handleLogin(event)">
+                    <div class="form-group">
+                        <label for="loginEmail">Email Address</label>
+                        <input type="email" id="loginEmail" required placeholder="your@email.com">
+                        <div class="form-icon">📧</div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="loginPassword">Password</label>
+                        <input type="password" id="loginPassword" required placeholder="Your password">
+                        <div class="form-icon">🔒</div>
+                        <button type="button" class="password-toggle" onclick="togglePassword('loginPassword')">👁️</button>
+                    </div>
+
+                    <div class="form-options">
+                        <label class="checkbox">
+                            <input type="checkbox" id="rememberMe">
+                            <span class="checkmark"></span>
+                            Remember me
+                        </label>
+                        <a href="#" class="forgot-password" onclick="handleForgotPassword()">Forgot password?</a>
+                    </div>
+
+                    <button type="submit" class="auth-button">Sign In</button>
+                    
+                    <div class="divider"><span>or</span></div>
+
+                    <div class="social-login">
+                        <button type="button" class="social-button google" onclick="socialLogin('google')">
+                            <span class="social-icon">🔍</span>
+                            Continue with Google
+                        </button>
+                        <button type="button" class="social-button apple" onclick="socialLogin('apple')">
+                            <span class="social-icon">🍎</span>
+                            Continue with Apple
+                        </button>
+                    </div>
+
+                    <div class="auth-switch">
+                        <p>Don't have an account? <a href="#" onclick="switchToRegister()">Sign up</a></p>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Register Form -->
+            <div class="auth-form-container hidden" id="registerForm">
+                <div class="auth-header">
+                    <div class="logo">VertA</div>
+                    <h2>Join VertA</h2>
+                    <p>Create your account and start improving your posture today</p>
+                </div>
+                
+                <form class="auth-form" onsubmit="handleRegister(event)">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="firstName">First Name</label>
+                            <input type="text" id="firstName" required placeholder="John">
+                            <div class="form-icon">👤</div>
+                        </div>
+                        <div class="form-group">
+                            <label for="lastName">Last Name</label>
+                            <input type="text" id="lastName" required placeholder="Doe">
+                            <div class="form-icon">👤</div>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="registerEmail">Email Address</label>
+                        <input type="email" id="registerEmail" required placeholder="your@email.com">
+                        <div class="form-icon">📧</div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="registerPassword">Password</label>
+                        <input type="password" id="registerPassword" required placeholder="Create a strong password" oninput="checkPasswordStrength(this.value)">
+                        <div class="form-icon">🔒</div>
+                        <button type="button" class="password-toggle" onclick="togglePassword('registerPassword')">👁️</button>
+                        <div class="password-strength" id="passwordStrength">
+                            <div class="strength-bar">
+                                <div class="strength-fill" id="strengthFill"></div>
+                            </div>
+                            <span class="strength-text" id="strengthText">Password strength</span>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="confirmPassword">Confirm Password</label>
+                        <input type="password" id="confirmPassword" required placeholder="Confirm your password">
+                        <div class="form-icon">🔒</div>
+                        <button type="button" class="password-toggle" onclick="togglePassword('confirmPassword')">👁️</button>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="deviceId">VertA Device ID (Optional)</label>
+                        <input type="text" id="deviceId" placeholder="VTA-XXXXXXXX">
+                        <div class="form-icon">📱</div>
+                        <small>Found on the back of your VertA cushion</small>
+                    </div>
+
+                    <div class="form-options">
+                        <label class="checkbox">
+                            <input type="checkbox" id="terms" required>
+                            <span class="checkmark"></span>
+                            I agree to the <a href="#" target="_blank">Terms of Service</a> and <a href="#" target="_blank">Privacy Policy</a>
+                        </label>
+                    </div>
+
+                    <div class="form-options">
+                        <label class="checkbox">
+                            <input type="checkbox" id="newsletter">
+                            <span class="checkmark"></span>
+                            Send me posture tips and product updates
+                        </label>
+                    </div>
+
+                    <button type="submit" class="auth-button">Create Account</button>
+                    
+                    <div class="divider"><span>or</span></div>
+
+                    <div class="social-login">
+                        <button type="button" class="social-button google" onclick="socialLogin('google')">
+                            <span class="social-icon">🔍</span>
+                            Sign up with Google
+                        </button>
+                        <button type="button" class="social-button apple" onclick="socialLogin('apple')">
+                            <span class="social-icon">🍎</span>
+                            Sign up with Apple
+                        </button>
+                    </div>
+
+                    <div class="auth-switch">
+                        <p>Already have an account? <a href="#" onclick="switchToLogin()">Sign in</a></p>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Notification Toast -->
+    <div class="notification toast" id="notificationToast">
+        <div class="toast-content">
+            <span class="toast-icon" id="toastIcon">✅</span>
+            <span class="toast-message" id="toastMessage">Success message</span>
+        </div>
+        <button class="toast-close" onclick="closeToast()">&times;</button>
+    </div>
+
+    <!-- Project Scripts -->
+    <script src="assets/js/3d-viz.js"></script>
+    <script src="assets/js/auth.js"></script>
+    <script src="assets/js/home.js"></script>
+</body>
+</html>

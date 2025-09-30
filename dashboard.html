@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VertA Dashboard - Smart Posture Monitoring</title>
+    
+    <!-- External Libraries -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    
+    <!-- Project Styles -->
+    <link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body class="dashboard-body">
+    <!-- Header -->
+    <header class="header dashboard-header">
+        <nav class="nav container">
+            <div class="logo">VertA</div>
+            <div class="nav-links">
+                <a href="#dashboard" class="active">Dashboard</a>
+                <a href="#analytics">Analytics</a>
+                <a href="#ml-model">AI Model</a>
+                <a href="#settings">Settings</a>
+            </div>
+            <!-- User Profile Dropdown -->
+            <div class="user-profile" id="userProfile">
+                <div class="profile-avatar" onclick="toggleProfileDropdown()">
+                    <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=user" alt="Profile" id="profileAvatar">
+                </div>
+                <div class="profile-dropdown hidden" id="profileDropdown">
+                    <div class="profile-info">
+                        <div class="profile-name" id="profileName">John Doe</div>
+                        <div class="profile-email" id="profileEmail">john@example.com</div>
+                    </div>
+                    <hr>
+                    <a href="javascript:void(0)" onclick="showProfile()">👤 My Profile</a>
+                    <a href="javascript:void(0)" onclick="showSettings()">⚙️ Settings</a>
+                    <a href="javascript:void(0)" onclick="showNotifications()">🔔 Notifications</a>
+                    <hr>
+                    <!-- ✅ 改成调用全局 handleLogout -->
+                    <a href="javascript:void(0)" onclick="handleLogout()">🚪 Sign Out</a>
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <!-- Stats Section -->
+    <section class="container dashboard-stats">
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-number" id="uptime">2847</div>
+                <div class="stat-label">Minutes Today</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="posture-score">87</div>
+                <div class="stat-label">Posture Score</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="alerts-count">12</div>
+                <div class="stat-label">Gentle Reminders</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="streak">15</div>
+                <div class="stat-label">Day Streak</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Dashboard Section -->
+    <section class="dashboard" id="dashboard">
+        <div class="container">
+            <h2>Live <span class="gradient-text">Dashboard</span></h2>
+            
+            <div class="dashboard-grid">
+                <!-- Real-time Status -->
+                <div class="dashboard-card">
+                    <div class="card-header">
+                        <div class="card-icon">📊</div>
+                        <div class="card-title">Current Status</div>
+                    </div>
+                    <div style="margin: 20px 0;">
+                        <div style="margin-bottom: 15px;">
+                            <span class="status-indicator status-good"></span>
+                            <strong>Posture: Excellent</strong>
+                        </div>
+                        <div style="margin-bottom: 15px;">
+                            <span class="status-indicator status-good"></span>
+                            <strong>Device: Connected</strong>
+                        </div>
+                        <div>
+                            <span class="status-indicator status-warning"></span>
+                            <strong>Battery: 72%</strong>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Posture Timeline -->
+                <div class="dashboard-card timeline-card" style="grid-column: span 2;">
+                    <div class="card-header">
+                        <div class="card-icon">📈</div>
+                        <div style="flex: 1;">
+                            <div class="card-title">Posture Timeline</div>
+                            <div class="timeline-subtitle">Track your posture throughout the day</div>
+                        </div>
+                    </div>
+                    <canvas id="posture-chart" width="400" height="200"></canvas>
+                </div>
+
+                <!-- Pressure Heatmap -->
+                <div class="dashboard-card">
+                    <div class="card-header">
+                        <div class="card-icon">🌡️</div>
+                        <div class="card-title">Pressure Heatmap</div>
+                    </div>
+                    <div id="pressure-grid" style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 5px; margin-top: 20px;">
+                        <!-- Pressure sensors will be populated by JavaScript -->
+                    </div>
+                </div>
+
+                <!-- Weekly Progress -->
+                <div class="dashboard-card">
+                    <div class="card-header">
+                        <div class="card-icon">🏆</div>
+                        <div class="card-title">Weekly Progress</div>
+                    </div>
+                    <canvas id="weekly-chart" width="300" height="200"></canvas>
+                </div>
+
+                <!-- Achievements -->
+                <div class="dashboard-card">
+                    <div class="card-header">
+                        <div class="card-icon">🎯</div>
+                        <div class="card-title">Achievements</div>
+                    </div>
+                    <div style="margin-top: 20px;">
+                        <div style="margin-bottom: 15px; padding: 10px; background: rgba(78, 205, 196, 0.2); border-radius: 8px;">
+                            <strong>🔥 Perfect Week!</strong><br>
+                            <small>7 days of good posture</small>
+                        </div>
+                        <div style="margin-bottom: 15px; padding: 10px; background: rgba(255, 107, 107, 0.2); border-radius: 8px;">
+                            <strong>⚡ Quick Responder</strong><br>
+                            <small>Fixed posture in under 5s</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ML Model Section -->
+    <section class="ml-section" id="ml-model">
+        <div class="container">
+            <h2>AI-Powered <span class="gradient-text">Posture Detection</span></h2>
+            <div class="ml-placeholder">
+                <h3>🧠 ML Model Integration Ready</h3>
+                <p>This section is prepared for your machine learning model integration. Current demo uses simulated data patterns.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Notification Toast -->
+    <div class="notification toast" id="notificationToast">
+        <div class="toast-content">
+            <span class="toast-icon" id="toastIcon">✅</span>
+            <span class="toast-message" id="toastMessage">Success message</span>
+        </div>
+        <button class="toast-close" onclick="closeToast()">&times;</button>
+    </div>
+
+    <!-- Project Scripts -->
+    <script src="assets/data/mock-data.js"></script>
+    <script src="assets/js/ml-interface.js"></script>
+    <script src="assets/js/3d-viz.js"></script>
+    <script src="assets/js/charts.js"></script>
+    <script src="assets/js/pressure-grid.js"></script>
+    <script src="assets/js/improved-timeline.js"></script>
+
+    <!-- ⚠️ 先加载 auth.js，再加载 dashboard.js -->
+    <script src="assets/js/auth.js"></script>
+    <script src="assets/js/dashboard.js"></script>
+</body>
+</html>
