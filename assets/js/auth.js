@@ -1,10 +1,15 @@
 /**
- * VertA Dashboard JavaScript
- * Handles dashboard functionality and user interface
- * Fixed: Auto-scrolling issue in weekly progress chart
+ * VertA Authentication API
+ * 连接真实的 Node.js 后端
  */
 
-// ==== Storage key constants (统一键名，避免拼写不一致) ====
+// API 配置
+const API_CONFIG = {
+    baseURL: 'http://localhost:5000/api',
+    timeout: 10000
+};
+
+// 存储键名（与 dashboard.js 保持一致）
 const STORAGE_KEYS = Object.freeze({
     token: 'vertaAuthToken',
     user: 'vertaUserData',
@@ -13,342 +18,191 @@ const STORAGE_KEYS = Object.freeze({
     loginInProgress: 'vertaLoginInProgress'
 });
 
-// ==== URL helpers（使用绝对路径，避免相对路径跳错目录） ====
-function toAbsolute(path) {
-    return new URL(path, `${location.origin}/`).href;
-}
-const DASHBOARD_URL = toAbsolute('/dashboard.html');
-const HOME_URL = toAbsolute('/index.html');
-
-// Global variables for update intervals
-let dashboardUpdateIntervals = { stats: null, charts: null };
-
-// Initialize dashboard
-document.addEventListener('DOMContentLoaded', function () {
-    console.log('📊 Dashboard loaded');
-    console.log('🌐 Origin:', location.origin, ' Path:', location.pathname);
-
-    // 第一次快速检查 + 兼容旧格式
-    const ok = ensureAuthDataPresent();
-
-    if (ok) {
-        try {
-            const user = JSON.parse(localStorage.getItem(STORAGE_KEYS.user));
-            console.log('👤 User:', user?.email);
-            updateUserProfile(user);
-            initDashboard();
-        } catch (e) {
-            console.error('❌ Error parsing user data:', e);
-            redirectToHome('Invalid user data');
-        }
-        return;
-    }
-
-    // 如果登录流程刚置位了“进行中”标志，给一次极短重检机会（50ms）
-    if (sessionStorage.getItem(STORAGE_KEYS.loginInProgress) === 'true') {
-        console.log('⏳ Login flag detected, rechecking shortly...');
-        setTimeout(() => {
-            if (ensureAuthDataPresent()) {
-                try {
-                    const user = JSON.parse(localStorage.getItem(STORAGE_KEYS.user));
-                    console.log('👤 User:', user?.email, '(after short wait)');
-                    updateUserProfile(user);
-                    initDashboard();
-                } catch (e) {
-                    console.error('❌ Error parsing user data after wait:', e);
-                    redirectToHome('Invalid user data');
-                }
-            } else {
-                redirectToHome('No authentication (after wait)');
-            }
-        }, 50);
-    } else {
-        redirectToHome('No authentication');
-    }
-});
-
-// 简单的重定向函数（使用绝对路径）
-function redirectToHome(reason) {
-    console.log(`🔄 Redirecting to home: ${reason}`);
-    setTimeout(() => {
-        window.location.replace(HOME_URL);
-    }, 100);
-}
-
-// 确保能读到 token/user；同时兼容 legacy 格式（vertaAuth）
-function ensureAuthDataPresent() {
-    let token = localStorage.getItem(STORAGE_KEYS.token);
-    let userStr = localStorage.getItem(STORAGE_KEYS.user);
-
-    console.log('🔍 Immediate auth check:');
-    console.log('- Token exists:', !!token, ' value:', token);
-    console.log('- User data exists:', !!userStr);
-
-    if (token && userStr) return true;
-
-    // 尝试从 legacy 结构回填
-    const legacyStr = localStorage.getItem(STORAGE_KEYS.legacyAuth);
-    if (legacyStr) {
-        try {
-            const legacy = JSON.parse(legacyStr);
-            if (legacy?.token && legacy?.user) {
-                console.log('♻️ Hydrating from legacy auth...');
-                localStorage.setItem(STORAGE_KEYS.token, legacy.token);
-                localStorage.setItem(STORAGE_KEYS.user, JSON.stringify(legacy.user));
-                token = legacy.token;
-                userStr = JSON.stringify(legacy.user);
-            }
-        } catch { /* ignore */ }
-    }
-
-    // 防止有人曾经错拼成 "vertalAuthToken"
-    const typoToken = localStorage.getItem('vertalAuthToken');
-    const typoUser = localStorage.getItem('vertalUserData');
-    if (!token && typoToken) {
-        console.warn('✏️ Found typo key vertalAuthToken, migrating to correct key');
-        localStorage.setItem(STORAGE_KEYS.token, typoToken);
-    }
-    if (!userStr && typoUser) {
-        console.warn('✏️ Found typo key vertalUserData, migrating to correct key');
-        localStorage.setItem(STORAGE_KEYS.user, typoUser);
-    }
-
-    token = localStorage.getItem(STORAGE_KEYS.token);
-    userStr = localStorage.getItem(STORAGE_KEYS.user);
-
-    return !!(token && userStr);
-}
-
-// 简化的认证检查（调试用）
-function checkDashboardAuth() {
+// ========== API 请求封装 ==========
+async function apiRequest(endpoint, options = {}) {
+    const url = `${API_CONFIG.baseURL}${endpoint}`;
     const token = localStorage.getItem(STORAGE_KEYS.token);
-    const userData = localStorage.getItem(STORAGE_KEYS.user);
-    console.log('🔐 Simple auth check:', { hasToken: !!token, hasUserData: !!userData, token, userData });
-    return !!(token && userData);
-}
-
-// Initialize all dashboard components
-function initDashboard() {
-    if (typeof initCharts === 'function') initCharts();
-    if (typeof initPressureGrid === 'function') initPressureGrid();
-    if (typeof initImprovedTimeline === 'function') initImprovedTimeline();
-    if (typeof initMLInterface === 'function') initMLInterface();
-
-    startDashboardUpdates();
-    console.log('✅ Dashboard components initialized');
-}
-
-// Update user profile information
-function updateUserProfile(userData) {
-    const profileName = document.getElementById('profileName');
-    const profileEmail = document.getElementById('profileEmail');
-    const profileAvatar = document.getElementById('profileAvatar');
-
-    if (profileName && userData?.firstName && userData?.lastName) {
-        profileName.textContent = `${userData.firstName} ${userData.lastName}`;
+    
+    const config = {
+        method: options.method || 'GET',
+        headers: {
+            'Content-Type': 'application/json',
+            ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
+            ...options.headers
+        },
+        ...options
+    };
+    
+    if (options.body && typeof options.body === 'object') {
+        config.body = JSON.stringify(options.body);
     }
-    if (profileEmail && userData?.email) {
-        profileEmail.textContent = userData.email;
-    }
-    if (profileAvatar && userData?.email) {
-        profileAvatar.src = `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(userData.email)}`;
-    }
-}
-
-// Start/Stop updates
-function startDashboardUpdates() {
-    stopDashboardUpdates();
-    dashboardUpdateIntervals.stats = setInterval(updateDashboardStats, 5000);
-    dashboardUpdateIntervals.charts = setInterval(updateDashboardCharts, 30000);
-    console.log('🔄 Real-time updates started (Stats: 5s, Charts: 30s)');
-}
-function stopDashboardUpdates() {
-    if (dashboardUpdateIntervals.stats) { clearInterval(dashboardUpdateIntervals.stats); dashboardUpdateIntervals.stats = null; }
-    if (dashboardUpdateIntervals.charts) { clearInterval(dashboardUpdateIntervals.charts); dashboardUpdateIntervals.charts = null; }
-    console.log('⏸️ Real-time updates stopped');
-}
-
-// Update dashboard statistics
-function updateDashboardStats() {
-    const uptimeElement = document.getElementById('uptime');
-    if (uptimeElement) {
-        const currentUptime = parseInt(uptimeElement.textContent) || 0;
-        uptimeElement.textContent = currentUptime + Math.floor(Math.random() * 3);
-    }
-    const postureScoreElement = document.getElementById('posture-score');
-    if (postureScoreElement) {
-        const variation = Math.floor(Math.random() * 6) - 3;
-        const currentScore = parseInt(postureScoreElement.textContent) || 87;
-        const newScore = Math.max(0, Math.min(100, currentScore + variation));
-        postureScoreElement.textContent = newScore;
-    }
-    const alertsElement = document.getElementById('alerts-count');
-    if (alertsElement && Math.random() < 0.3) {
-        const currentAlerts = parseInt(alertsElement.textContent) || 0;
-        alertsElement.textContent = currentAlerts + 1;
-    }
-}
-
-// Update charts with scroll preservation
-function updateDashboardCharts() {
-    const scrollPos = window.scrollY;
-    const scrollElement = document.scrollingElement || document.documentElement;
+    
     try {
-        if (typeof updatePressureGridVisualization === 'function') updatePressureGridVisualization();
-        if (typeof updateTimelineChart === 'function') updateTimelineChart();
-        console.log('📈 Charts updated');
+        const response = await fetch(url, config);
+        const data = await response.json();
+        
+        if (!response.ok) {
+            throw new Error(data.message || `HTTP ${response.status}`);
+        }
+        
+        return data;
     } catch (error) {
-        console.error('Error updating charts:', error);
+        console.error('API Request Error:', error);
+        throw error;
     }
-    window.scrollTo(0, scrollPos);
-    requestAnimationFrame(() => { window.scrollTo(0, scrollPos); scrollElement.scrollTop = scrollPos; });
-    setTimeout(() => { if (Math.abs(window.scrollY - scrollPos) > 5) window.scrollTo(0, scrollPos); }, 50);
 }
 
-// Manual chart refresh
-function refreshCharts() {
-    console.log('🔄 Manual chart refresh triggered');
-    showToast?.('Refreshing charts...', 'info', 2000);
-    updateDashboardCharts();
-}
-
-// Profile dropdown
-function toggleProfileDropdown() { document.getElementById('profileDropdown')?.classList.toggle('hidden'); }
-function showProfile() { showToast?.('Profile settings coming soon!', 'info', 3000); toggleProfileDropdown(); }
-function showSettings() { showToast?.('Settings panel coming soon!', 'info', 3000); toggleProfileDropdown(); }
-function showNotifications() { showToast?.('Notifications panel coming soon!', 'info', 3000); toggleProfileDropdown(); }
-
-// Close dropdown
-document.addEventListener('click', function (event) {
-    const profileDropdown = document.getElementById('profileDropdown');
-    const profileAvatar = document.querySelector('.profile-avatar');
-    if (profileDropdown && !profileDropdown.classList.contains('hidden')) {
-        if (!profileAvatar || (!profileAvatar.contains(event.target) && !profileDropdown.contains(event.target))) {
-            profileDropdown.classList.add('hidden');
-        }
-    }
-});
-
-// Handle page visibility
-document.addEventListener('visibilitychange', function () {
-    if (document.hidden) {
-        console.log('👁️ Tab hidden - pausing updates');
-        stopDashboardUpdates();
-    } else {
-        console.log('👁️ Tab visible - resuming updates');
-        if (checkDashboardAuth()) {
-            startDashboardUpdates();
-            updateDashboardCharts();
-        }
-    }
-});
-
-// Clean up on page unload
-window.addEventListener('beforeunload', function () {
-    stopDashboardUpdates();
-});
-
-// Debug helpers
-function debugAuthState() {
-    console.log('🔍 Current localStorage contents:');
-    console.log(STORAGE_KEYS.token + ':', localStorage.getItem(STORAGE_KEYS.token));
-    console.log(STORAGE_KEYS.user + ':', localStorage.getItem(STORAGE_KEYS.user));
-    console.log(STORAGE_KEYS.legacyAuth + ':', localStorage.getItem(STORAGE_KEYS.legacyAuth));
-    console.log(STORAGE_KEYS.remember + ':', localStorage.getItem(STORAGE_KEYS.remember));
-    console.log('session', STORAGE_KEYS.loginInProgress + ':', sessionStorage.getItem(STORAGE_KEYS.loginInProgress));
-    console.log('Current page:', window.location.pathname, ' URL:', window.location.href);
-}
-
-// Test (不再 clear 全局，避免误删其他键)
-function setTestAuthData() {
-    console.log('🧪 Setting test auth data...');
-    const testUser = { id: 'test123', email: 'test@dashboard.com', firstName: 'Dashboard', lastName: 'Test', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=dashboard' };
-    const testToken = 'dashboard_test_token_' + Date.now();
-    localStorage.setItem(STORAGE_KEYS.user, JSON.stringify(testUser));
-    localStorage.setItem(STORAGE_KEYS.token, testToken);
-    console.log('✅ Saved user data/token. Reloading...');
-    window.location.reload();
-}
-
-// Redirect tracking
-let redirectCount = 0;
-function trackRedirect(url, source) {
-    redirectCount++;
-    console.log(`🔄 REDIRECT #${redirectCount} from ${source}: ${window.location.href} → ${url}`);
-    debugAuthState();
-}
-
-// 简单的authManager对象
-const authManager = {
-    handleLogout: function() {
-        console.log('🚪 Logging out...');
+// ========== 注册功能 ==========
+async function registerUser(name, email, password) {
+    try {
+        console.log('Registering user:', email);
         
-        // 清除所有认证数据
-        localStorage.removeItem(STORAGE_KEYS.token);
-        localStorage.removeItem(STORAGE_KEYS.user);
-        localStorage.removeItem(STORAGE_KEYS.legacyAuth);
-        localStorage.removeItem(STORAGE_KEYS.remember);
-        sessionStorage.clear();
+        const data = await apiRequest('/register', {
+            method: 'POST',
+            body: { name, email, password }
+        });
         
-        showToast('Signed out successfully', 'success', 2000);
-        
-        // 重定向到首页
-        setTimeout(() => {
-            window.location.href = HOME_URL;
-        }, 2000);
-    },
-    
-    handleSocialLogin: function(provider) {
-        console.log(`🔗 Starting ${provider} login...`);
-        
-        // 清除所有数据
-        localStorage.clear();
-        sessionStorage.clear();
-        
-        // 直接创建认证数据
-        const user = {
-            id: provider + '123',
-            email: `demo@${provider}.com`,
-            firstName: 'Social',
-            lastName: 'User',
-            avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${provider}`
-        };
-        
-        const token = `${provider}_token_` + Date.now();
-        
-        console.log('💾 Saving auth data directly...');
-        localStorage.setItem(STORAGE_KEYS.user, JSON.stringify(user));
-        localStorage.setItem(STORAGE_KEYS.token, token);
-        
-        // 验证保存
-        const saved1 = localStorage.getItem(STORAGE_KEYS.user);
-        const saved2 = localStorage.getItem(STORAGE_KEYS.token);
-        
-        if (saved1 && saved2) {
-            console.log('🚀 SUCCESS! Redirecting to dashboard...');
-            showToast('Login successful!', 'success', 1000);
-            setTimeout(() => {
-                window.location.href = DASHBOARD_URL;
-            }, 1000);
+        if (data.success) {
+            console.log('Registration successful:', data.user.email);
+            displayToast('注册成功！请登录', 'success');
+            return { success: true, user: data.user };
         } else {
-            console.error('❌ FAILED to save auth data!');
-            showToast('Login failed!', 'error');
+            displayToast(data.message || '注册失败', 'error');
+            return { success: false, message: data.message };
         }
-    }
-};
-
-// 简单的handleLogout函数
-function handleLogout() {
-    if (confirm('Are you sure you want to sign out?')) {
-        authManager.handleLogout();
+    } catch (error) {
+        console.error('Registration error:', error);
+        const message = error.message || '网络错误，请检查后端服务';
+        displayToast(message, 'error');
+        return { success: false, message };
     }
 }
 
-// 简单的showToast函数
-function showToast(message, type = 'success', duration = 4000) {
-    console.log(`🍞 Toast: ${message} (${type})`);
+// ========== 登录功能 ==========
+async function loginUser(email, password, rememberMe = false) {
+    try {
+        console.log('Logging in user:', email);
+        
+        // 清除旧数据
+        clearAuthData();
+        
+        // 设置登录进行中标志
+        sessionStorage.setItem(STORAGE_KEYS.loginInProgress, 'true');
+        
+        const data = await apiRequest('/login', {
+            method: 'POST',
+            body: { email, password }
+        });
+        
+        if (data.success && data.token && data.user) {
+            console.log('Login successful:', data.user.email);
+            
+            // 保存认证数据
+            saveAuthData(data.token, data.user, rememberMe);
+            
+            displayToast('登录成功！', 'success', 1500);
+            
+            // 跳转到仪表板
+            setTimeout(() => {
+                window.location.href = '/dashboard.html';
+            }, 1500);
+            
+            return { success: true, user: data.user, token: data.token };
+        } else {
+            sessionStorage.removeItem(STORAGE_KEYS.loginInProgress);
+            displayToast(data.message || '登录失败', 'error');
+            return { success: false, message: data.message };
+        }
+    } catch (error) {
+        console.error('Login error:', error);
+        sessionStorage.removeItem(STORAGE_KEYS.loginInProgress);
+        const message = error.message || '网络错误，请检查后端服务';
+        displayToast(message, 'error');
+        return { success: false, message };
+    }
+}
+
+// ========== 登出功能 ==========
+function logoutUser() {
+    console.log('Logging out...');
     
-    // 创建简单的toast元素
+    clearAuthData();
+    displayToast('已登出', 'success', 2000);
+    
+    setTimeout(() => {
+        window.location.href = '/index.html';
+    }, 2000);
+}
+
+// ========== 获取所有用户（测试用） ==========
+async function getAllUsers() {
+    try {
+        const data = await apiRequest('/users');
+        
+        if (data.success) {
+            console.log('Users retrieved:', data.count);
+            return data.users;
+        }
+        return [];
+    } catch (error) {
+        console.error('Get users error:', error);
+        return [];
+    }
+}
+
+// ========== 辅助函数 ==========
+
+// 保存认证数据
+function saveAuthData(token, user, rememberMe = false) {
+    console.log('Saving auth data...');
+    
+    localStorage.setItem(STORAGE_KEYS.token, token);
+    localStorage.setItem(STORAGE_KEYS.user, JSON.stringify(user));
+    
+    if (rememberMe) {
+        localStorage.setItem(STORAGE_KEYS.remember, 'true');
+    }
+    
+    // 移除进行中标志
+    sessionStorage.removeItem(STORAGE_KEYS.loginInProgress);
+    
+    console.log('Auth data saved');
+}
+
+// 清除认证数据
+function clearAuthData() {
+    localStorage.removeItem(STORAGE_KEYS.token);
+    localStorage.removeItem(STORAGE_KEYS.user);
+    localStorage.removeItem(STORAGE_KEYS.legacyAuth);
+    localStorage.removeItem(STORAGE_KEYS.remember);
+    sessionStorage.clear();
+}
+
+// 检查是否已登录
+function isAuthenticated() {
+    return !!(localStorage.getItem(STORAGE_KEYS.token) && 
+              localStorage.getItem(STORAGE_KEYS.user));
+}
+
+// 获取当前用户
+function getCurrentUser() {
+    const userStr = localStorage.getItem(STORAGE_KEYS.user);
+    if (userStr) {
+        try {
+            return JSON.parse(userStr);
+        } catch (e) {
+            console.error('Error parsing user data:', e);
+            return null;
+        }
+    }
+    return null;
+}
+
+// Toast 通知（修复版，避免递归）
+function displayToast(message, type = 'success', duration = 4000) {
+    console.log(`Toast: ${message} (${type})`);
+    
+    // 创建 toast 元素
     const toast = document.createElement('div');
     toast.style.cssText = `
         position: fixed;
@@ -356,11 +210,11 @@ function showToast(message, type = 'success', duration = 4000) {
         right: 20px;
         background: ${type === 'success' ? '#4caf50' : type === 'error' ? '#f44336' : '#2196f3'};
         color: white;
-        padding: 12px 24px;
-        border-radius: 4px;
+        padding: 16px 24px;
+        border-radius: 8px;
         z-index: 10000;
         font-family: Arial, sans-serif;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.3);
     `;
     toast.textContent = message;
     
@@ -373,44 +227,103 @@ function showToast(message, type = 'success', duration = 4000) {
     }, duration);
 }
 
-// 简单的模态框函数
-function openAuthModal(mode = 'login') {
-    const modal = document.getElementById('authModal');
-    const loginForm = document.getElementById('loginForm');
-    const registerForm = document.getElementById('registerForm');
+// ========== 页面加载时的处理 ==========
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('Auth system loaded');
     
-    if (!modal) {
-        console.warn('Auth modal not found');
-        return;
+    // 绑定登录表单
+    const loginForm = document.getElementById('login-form') || document.getElementById('loginForm');
+    if (loginForm) {
+        loginForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const email = document.getElementById('login-email')?.value || 
+                         document.getElementById('loginEmail')?.value;
+            const password = document.getElementById('login-password')?.value || 
+                            document.getElementById('loginPassword')?.value;
+            const rememberMe = document.getElementById('remember-me')?.checked || false;
+            
+            if (email && password) {
+                await loginUser(email, password, rememberMe);
+            }
+        });
     }
     
-    if (mode === 'login') {
-        if (loginForm) loginForm.classList.remove('hidden');
-        if (registerForm) registerForm.classList.add('hidden');
-    } else {
-        if (loginForm) loginForm.classList.add('hidden');
-        if (registerForm) registerForm.classList.remove('hidden');
+    // 绑定注册表单
+    const registerForm = document.getElementById('register-form') || document.getElementById('registerForm');
+    if (registerForm) {
+        registerForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const name = document.getElementById('register-name')?.value || 
+                        document.getElementById('registerName')?.value;
+            const email = document.getElementById('register-email')?.value || 
+                         document.getElementById('registerEmail')?.value;
+            const password = document.getElementById('register-password')?.value || 
+                            document.getElementById('registerPassword')?.value;
+            
+            if (name && email && password) {
+                const result = await registerUser(name, email, password);
+                
+                // 注册成功后切换到登录表单
+                if (result.success) {
+                    setTimeout(() => {
+                        // 关闭注册模态框，打开登录模态框
+                        const registerModal = document.getElementById('register-modal') || 
+                                            document.getElementById('registerModal');
+                        const loginModal = document.getElementById('login-modal') || 
+                                         document.getElementById('loginModal');
+                        
+                        if (registerModal) registerModal.style.display = 'none';
+                        if (loginModal) loginModal.style.display = 'flex';
+                        
+                        // 预填充邮箱
+                        const loginEmailInput = document.getElementById('login-email') || 
+                                               document.getElementById('loginEmail');
+                        if (loginEmailInput) loginEmailInput.value = email;
+                    }, 1500);
+                }
+            }
+        });
     }
     
-    modal.classList.add('show');
-    document.body.style.overflow = 'hidden';
-}
-
-function closeAuthModal() {
-    const modal = document.getElementById('authModal');
-    if (modal) {
-        modal.classList.remove('show');
-        document.body.style.overflow = 'auto';
+    // 绑定登出按钮
+    const logoutBtns = document.querySelectorAll('.logout-btn, [onclick*="handleLogout"]');
+    logoutBtns.forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            e.preventDefault();
+            if (confirm('确定要退出登录吗？')) {
+                logoutUser();
+            }
+        });
+    });
+    
+    // 检查当前页面是否需要认证
+    const currentPath = window.location.pathname;
+    if (currentPath.includes('dashboard.html') && !isAuthenticated()) {
+        console.log('Dashboard accessed without authentication');
+        displayToast('请先登录', 'error');
+        setTimeout(() => {
+            window.location.href = '/index.html';
+        }, 2000);
     }
-}
+});
 
-// Export functions
-window.authManager = authManager;
-window.handleLogout = handleLogout;
-window.showToast = showToast;
-window.socialLogin = (provider) => authManager.handleSocialLogin(provider);
-window.openAuthModal = openAuthModal;
-window.closeAuthModal = closeAuthModal;
+// ========== 导出到全局 ==========
+window.vertaAuth = {
+    register: registerUser,
+    login: loginUser,
+    logout: logoutUser,
+    isAuthenticated,
+    getCurrentUser,
+    getAllUsers
+};
 
-console.log('🔐 Simple authentication system loaded');
+// 兼容旧的 authManager
+window.authManager = window.authManager || {};
+window.authManager.handleLogout = logoutUser;
 
+// 提供全局 showToast
+window.showToast = displayToast;
+
+console.log('VertA Auth API ready');

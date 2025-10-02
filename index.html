@@ -1415,215 +1415,275 @@
     </footer>
 
     <script>
-    // Toast Notification
-    function showToast(message, type = 'success') {
-        const toast = document.getElementById('notificationToast');
-        const icon = document.getElementById('toastIcon');
-        const messageEl = document.getElementById('toastMessage');
-        
-        if (!toast || !icon || !messageEl) return;
-        
-        if (type === 'success') {
-            icon.textContent = '✓';
-            icon.style.color = '#2d7a6e';
-        } else if (type === 'error') {
-            icon.textContent = '✕';
-            icon.style.color = '#dc3545';
-        } else {
-            icon.textContent = 'i';
-            icon.style.color = '#17a2b8';
-        }
-        
-        messageEl.textContent = message;
-        toast.classList.add('show');
-        
-        setTimeout(() => {
-            toast.classList.remove('show');
-        }, 3000);
-    }
+            // ========== API 配置 ==========
+        const API_BASE_URL = 'http://localhost:5000/api';
 
-    function closeToast() {
-        const toast = document.getElementById('notificationToast');
-        if (toast) {
-            toast.classList.remove('show');
-        }
-    }
-
-    // ✅ Social Login - 修复：保存 token + userData
-    function socialLogin(provider) {
-        console.log(`Attempting to login with ${provider}`);
-        showToast(`Logging in with ${provider}...`, 'info');
-
-        setTimeout(() => {
-            const token = provider + '_token_' + Date.now();
-            const user = {
-                email: `demo@${provider}.com`,
-                firstName: 'Social',
-                lastName: 'User'
-            };
-
-            localStorage.setItem('vertaAuthToken', token);
-            localStorage.setItem('vertaUserData', JSON.stringify(user));
-
-            console.log(`✅ Social login success, saved token & userData for ${provider}`);
-
-            showToast('Login successful!', 'success');
-            setTimeout(() => {
-                window.location.href = 'dashboard.html';
-            }, 500);
-        }, 1000);
-    }
-
-    // ✅ Handle Login - 修复：保存 token + userData
-    function handleLogin(event) {
-        event.preventDefault();
-        
-        const email = document.getElementById('loginEmail').value;
-        const password = document.getElementById('loginPassword').value;
-        
-        // 模拟token & 用户数据
-        const token = 'mock_token_' + Date.now();
-        const user = {
-            email: email,
-            firstName: 'Demo',
-            lastName: 'User'
-        };
-
-        localStorage.setItem('vertaAuthToken', token);
-        localStorage.setItem('vertaUserData', JSON.stringify(user));
-
-        console.log('✅ Login success, saved token & userData to localStorage');
-
-        showToast('Login successful! Redirecting...', 'success');
-        setTimeout(() => {
-            window.location.href = 'dashboard.html';
-        }, 1500);
-    }
-
-    // ✅ Handle Register - 修复：保存 token + userData
-    function handleRegister(event) {
-        event.preventDefault();
-        
-        const name = document.getElementById('registerName').value;
-        const email = document.getElementById('registerEmail').value;
-        const terms = document.getElementById('terms').checked;
-        
-        if (!terms) {
-            showToast('Please agree to the Terms of Service', 'error');
-            return;
-        }
-
-        const token = 'mock_token_' + Date.now();
-        const user = {
-            email: email,
-            firstName: name.split(' ')[0] || 'New',
-            lastName: name.split(' ')[1] || 'User'
-        };
-
-        localStorage.setItem('vertaAuthToken', token);
-        localStorage.setItem('vertaUserData', JSON.stringify(user));
-
-        console.log('✅ Register success, saved token & userData to localStorage');
-
-        showToast('Account created successfully!', 'success');
-        setTimeout(() => {
-            window.location.href = 'dashboard.html';
-        }, 1500);
-    }
-
-    // Modal Functions
-    function openAuthModal(type) {
-        const modal = document.getElementById('authModal');
-        if (!modal) return;
-        
-        modal.classList.add('active');
-        document.body.style.overflow = 'hidden';
-        
-        if (type === 'login') {
-            switchToLogin();
-        } else if (type === 'register') {
-            switchToRegister();
-        }
-    }
-
-    function closeAuthModal() {
-        const modal = document.getElementById('authModal');
-        if (!modal) return;
-        
-        modal.classList.remove('active');
-        document.body.style.overflow = 'auto';
-    }
-
-    function switchToLogin() {
-        const loginForm = document.getElementById('loginForm');
-        const registerForm = document.getElementById('registerForm');
-        
-        if (loginForm && registerForm) {
-            loginForm.classList.remove('hidden');
-            registerForm.classList.add('hidden');
-        }
-    }
-
-    function switchToRegister() {
-        const loginForm = document.getElementById('loginForm');
-        const registerForm = document.getElementById('registerForm');
-        
-        if (loginForm && registerForm) {
-            loginForm.classList.add('hidden');
-            registerForm.classList.remove('hidden');
-        }
-    }
-
-    // Event Listeners
-    document.addEventListener('click', (e) => {
-        const modal = document.getElementById('authModal');
-        if (e.target === modal) {
-            closeAuthModal();
-        }
-    });
-
-    document.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape') {
-            closeAuthModal();
-        }
-    });
-
-    // Smooth scroll
-    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-        anchor.addEventListener('click', function (e) {
-            const href = this.getAttribute('href');
+        // ========== Toast 通知 ==========
+        function showToast(message, type = 'success') {
+            const toast = document.getElementById('notificationToast');
+            const icon = document.getElementById('toastIcon');
+            const messageEl = document.getElementById('toastMessage');
             
-            if (href && href !== '#' && href.length > 1) {
-                e.preventDefault();
-                const target = document.querySelector(href);
-                if (target) {
-                    target.scrollIntoView({
-                        behavior: 'smooth',
-                        block: 'start'
-                    });
+            if (!toast || !icon || !messageEl) return;
+            
+            if (type === 'success') {
+                icon.textContent = '✓';
+                icon.style.color = '#2d7a6e';
+            } else if (type === 'error') {
+                icon.textContent = '✕';
+                icon.style.color = '#dc3545';
+            } else {
+                icon.textContent = 'i';
+                icon.style.color = '#17a2b8';
+            }
+            
+            messageEl.textContent = message;
+            toast.classList.add('show');
+            
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 3000);
+        }
+
+        function closeToast() {
+            const toast = document.getElementById('notificationToast');
+            if (toast) {
+                toast.classList.remove('show');
+            }
+        }
+
+        // ========== 注册功能 - 连接真实 API ==========
+        async function handleRegister(event) {
+            event.preventDefault();
+            
+            const name = document.getElementById('registerName').value;
+            const email = document.getElementById('registerEmail').value;
+            const password = document.getElementById('registerPassword').value;
+            const terms = document.getElementById('terms').checked;
+            
+            if (!terms) {
+                showToast('Please agree to the Terms of Service', 'error');
+                return;
+            }
+
+            // 显示加载状态
+            const submitBtn = event.target.querySelector('.auth-button');
+            const originalText = submitBtn.textContent;
+            submitBtn.textContent = 'Creating Account...';
+            submitBtn.disabled = true;
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/register`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ name, email, password })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    showToast('Account created successfully!', 'success');
+                    
+                    // 清空表单
+                    event.target.reset();
+                    
+                    // 1.5秒后切换到登录表单
+                    setTimeout(() => {
+                        switchToLogin();
+                        // 预填充邮箱
+                        document.getElementById('loginEmail').value = email;
+                        showToast('Please sign in with your new account', 'info');
+                    }, 1500);
+                } else {
+                    showToast(data.message || 'Registration failed', 'error');
                 }
+            } catch (error) {
+                console.error('Registration error:', error);
+                showToast('Network error. Please check if backend is running.', 'error');
+            } finally {
+                submitBtn.textContent = originalText;
+                submitBtn.disabled = false;
+            }
+        }
+
+        // ========== 登录功能 - 连接真实 API ==========
+        async function handleLogin(event) {
+            event.preventDefault();
+            
+            const email = document.getElementById('loginEmail').value;
+            const password = document.getElementById('loginPassword').value;
+            const rememberMe = document.getElementById('rememberMe').checked;
+
+            // 显示加载状态
+            const submitBtn = event.target.querySelector('.auth-button');
+            const originalText = submitBtn.textContent;
+            submitBtn.textContent = 'Signing In...';
+            submitBtn.disabled = true;
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/login`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ email, password })
+                });
+
+                const data = await response.json();
+
+                if (data.success && data.token && data.user) {
+                    // 保存认证数据
+                    localStorage.setItem('vertaAuthToken', data.token);
+                    localStorage.setItem('vertaUserData', JSON.stringify(data.user));
+                    
+                    if (rememberMe) {
+                        localStorage.setItem('vertaRememberMe', 'true');
+                    }
+
+                    console.log('Login successful, saved token & user data');
+                    
+                    showToast('Login successful! Redirecting...', 'success');
+                    
+                    setTimeout(() => {
+                        window.location.href = 'dashboard.html';
+                    }, 1500);
+                } else {
+                    showToast(data.message || 'Login failed', 'error');
+                }
+            } catch (error) {
+                console.error('Login error:', error);
+                showToast('Network error. Please check if backend is running.', 'error');
+            } finally {
+                submitBtn.textContent = originalText;
+                submitBtn.disabled = false;
+            }
+        }
+
+        // ========== Social Login（暂时保持模拟） ==========
+        // 如果后续需要真实的 OAuth，可以在这里实现
+        function socialLogin(provider) {
+            showToast(`${provider} login coming soon!`, 'info');
+            
+            // 临时模拟 - 可以注释掉这部分，强制用户使用真实注册
+            /*
+            setTimeout(() => {
+                const token = provider + '_mock_token_' + Date.now();
+                const user = {
+                    email: `demo@${provider}.com`,
+                    name: 'Social User',
+                    id: 'social_' + Date.now()
+                };
+
+                localStorage.setItem('vertaAuthToken', token);
+                localStorage.setItem('vertaUserData', JSON.stringify(user));
+
+                showToast('Login successful!', 'success');
+                setTimeout(() => {
+                    window.location.href = 'dashboard.html';
+                }, 500);
+            }, 1000);
+            */
+        }
+
+        // ========== 模态框函数 ==========
+        function openAuthModal(type) {
+            const modal = document.getElementById('authModal');
+            if (!modal) return;
+            
+            modal.classList.add('active');
+            document.body.style.overflow = 'hidden';
+            
+            if (type === 'login') {
+                switchToLogin();
+            } else if (type === 'register') {
+                switchToRegister();
+            }
+        }
+
+        function closeAuthModal() {
+            const modal = document.getElementById('authModal');
+            if (!modal) return;
+            
+            modal.classList.remove('active');
+            document.body.style.overflow = 'auto';
+        }
+
+        function switchToLogin() {
+            const loginForm = document.getElementById('loginForm');
+            const registerForm = document.getElementById('registerForm');
+            
+            if (loginForm && registerForm) {
+                loginForm.classList.remove('hidden');
+                registerForm.classList.add('hidden');
+            }
+        }
+
+        function switchToRegister() {
+            const loginForm = document.getElementById('loginForm');
+            const registerForm = document.getElementById('registerForm');
+            
+            if (loginForm && registerForm) {
+                loginForm.classList.add('hidden');
+                registerForm.classList.remove('hidden');
+            }
+        }
+
+        // ========== 事件监听 ==========
+        // 点击模态框外部关闭
+        document.addEventListener('click', (e) => {
+            const modal = document.getElementById('authModal');
+            if (e.target === modal) {
+                closeAuthModal();
             }
         });
-    });
 
-    // Animation on scroll
-    const observerOptions = {
-        threshold: 0.1,
-        rootMargin: '0px 0px -50px 0px'
-    };
-
-    const observer = new IntersectionObserver((entries) => {
-        entries.forEach(entry => {
-            if (entry.isIntersecting) {
-                entry.target.style.opacity = '1';
-                entry.target.style.transform = 'translateY(0)';
+        // ESC 键关闭
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                closeAuthModal();
             }
         });
-    }, observerOptions);
 
-    document.querySelectorAll('.feature-card, .step-card, .stat-card').forEach(card => {
-        observer.observe(card);
-    });
+        // 平滑滚动
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                const href = this.getAttribute('href');
+                
+                if (href && href !== '#' && href.length > 1) {
+                    e.preventDefault();
+                    const target = document.querySelector(href);
+                    if (target) {
+                        target.scrollIntoView({
+                            behavior: 'smooth',
+                            block: 'start'
+                        });
+                    }
+                }
+            });
+        });
+
+        // 滚动动画
+        const observerOptions = {
+            threshold: 0.1,
+            rootMargin: '0px 0px -50px 0px'
+        };
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.style.opacity = '1';
+                    entry.target.style.transform = 'translateY(0)';
+                }
+            });
+        }, observerOptions);
+
+        document.querySelectorAll('.feature-card, .step-card, .stat-card').forEach(card => {
+            observer.observe(card);
+        });
+
+        console.log('VertA frontend connected to backend API');
 </script>
 
 </body>
