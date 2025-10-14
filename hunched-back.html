@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fix Hunched Back - VertA Posture Guide</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: linear-gradient(135deg, #c5e9dd 0%, #7bc4b3 100%);
+            color: white;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        .back-button {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            color: white;
+            text-decoration: none;
+            font-weight: 600;
+            padding: 12px 24px;
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(10px);
+            border-radius: 50px;
+            transition: all 0.3s ease;
+            margin-bottom: 30px;
+        }
+
+        .back-button:hover {
+            background: rgba(255, 255, 255, 0.25);
+            transform: translateX(-5px);
+        }
+
+        .guide-header {
+            text-align: center;
+            margin-bottom: 50px;
+        }
+
+        .warning-icon {
+            font-size: 5rem;
+            margin-bottom: 20px;
+            filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.2));
+        }
+
+        .guide-title {
+            font-size: 3rem;
+            font-weight: 900;
+            margin-bottom: 15px;
+            color: white;
+            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+        }
+
+        .guide-subtitle {
+            font-size: 1.3rem;
+            color: rgba(255, 255, 255, 0.9);
+            line-height: 1.6;
+        }
+
+        .content-card {
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(20px);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 24px;
+            padding: 40px;
+            margin-bottom: 30px;
+            transition: all 0.3s ease;
+        }
+
+        .content-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.2);
+        }
+
+        .card-title {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: #2d7a6e;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .card-icon {
+            font-size: 2rem;
+        }
+
+        .card-content {
+            font-size: 1.1rem;
+            line-height: 1.8;
+            color: rgba(255, 255, 255, 0.95);
+        }
+
+        /* Video Section */
+        .video-container {
+            position: relative;
+            width: 100%;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 16px;
+            overflow: hidden;
+            margin-top: 20px;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+        }
+
+        .video-container video {
+            width: 100%;
+            height: auto;
+            display: block;
+            border-radius: 16px;
+        }
+
+        .tips-list {
+            list-style: none;
+            padding: 0;
+        }
+
+        .tips-list li {
+            padding: 15px;
+            margin-bottom: 15px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            border-left: 4px solid #2d7a6e;
+            transition: all 0.3s ease;
+        }
+
+        .tips-list li:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: translateX(10px);
+        }
+
+        .tips-list strong {
+            color: #2d7a6e;
+            font-weight: 700;
+        }
+
+        .exercise-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .exercise-item {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 20px;
+            border-radius: 16px;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+
+        .exercise-item:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: scale(1.05);
+        }
+
+        .exercise-emoji {
+            font-size: 3rem;
+            margin-bottom: 10px;
+        }
+
+        .exercise-name {
+            font-weight: 700;
+            margin-bottom: 8px;
+            color: white;
+        }
+
+        .cta-button {
+            display: inline-block;
+            padding: 18px 36px;
+            background: linear-gradient(45deg, #2d7a6e, #1e5a50);
+            color: white;
+            text-decoration: none;
+            border-radius: 50px;
+            font-weight: 600;
+            font-size: 1.1rem;
+            transition: all 0.3s ease;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            margin-top: 30px;
+        }
+
+        .cta-button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.3);
+        }
+
+        .center {
+            text-align: center;
+        }
+
+        @media (max-width: 768px) {
+            .guide-title {
+                font-size: 2rem;
+            }
+
+            .guide-subtitle {
+                font-size: 1.1rem;
+            }
+
+            .content-card {
+                padding: 25px;
+            }
+
+            .card-title {
+                font-size: 1.5rem;
+            }
+
+            .card-content {
+                font-size: 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <a href="dashboard.html" class="back-button">
+            ← Back to Dashboard
+        </a>
+
+        <div class="guide-header">
+            <div class="warning-icon">⚠️</div>
+            <h1 class="guide-title">Hunched Back Detected</h1>
+            <p class="guide-subtitle">
+                You're leaning forward, which can strain your neck and upper back. Let's fix it!
+            </p>
+        </div>
+
+        <!-- Video Section -->
+        <div class="content-card">
+            <h2 class="card-title">
+                <span class="card-icon">🎥</span>
+                Posture Correction Guide
+            </h2>
+            <div class="card-content">
+                <p style="margin-bottom: 20px;">
+                    Watch this video to learn the difference between hunched posture and correct sitting position, 
+                    and discover how to fix your posture step by step.
+                </p>
+                
+                <div class="video-container">
+                    <video id="postureVideo" controls preload="metadata">
+                        <source src="assets/videos/hunched-back-correction.mp4" type="video/mp4">
+                        Your browser does not support the video tag.
+                    </video>
+                </div>
+            </div>
+        </div>
+
+        <div class="content-card">
+            <h2 class="card-title">
+                <span class="card-icon">🔍</span>
+                What's Happening?
+            </h2>
+            <div class="card-content">
+                <p>
+                    When you hunch forward, your head moves ahead of your spine, creating extra pressure 
+                    on your neck muscles. Over time, this can lead to:
+                </p>
+                <ul class="tips-list">
+                    <li><strong>Neck pain</strong> - Strained muscles from supporting your head's weight</li>
+                    <li><strong>Upper back tension</strong> - Rounded shoulders pulling on muscles</li>
+                    <li><strong>Headaches</strong> - Poor blood flow and muscle tension</li>
+                    <li><strong>Reduced lung capacity</strong> - Compressed chest limiting breathing</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="content-card">
+            <h2 class="card-title">
+                <span class="card-icon">✅</span>
+                Quick Fixes
+            </h2>
+            <div class="card-content">
+                <ul class="tips-list">
+                    <li>
+                        <strong>Roll your shoulders back</strong> - Imagine tucking your shoulder blades into your back pockets
+                    </li>
+                    <li>
+                        <strong>Align your ears with shoulders</strong> - Your head should be directly above your spine, not jutting forward
+                    </li>
+                    <li>
+                        <strong>Check your screen height</strong> - The top of your monitor should be at or slightly below eye level
+                    </li>
+                    <li>
+                        <strong>Take micro-breaks</strong> - Stand up and stretch every 30 minutes
+                    </li>
+                    <li>
+                        <strong>Strengthen your core</strong> - A strong core supports proper posture naturally
+                    </li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="content-card">
+            <h2 class="card-title">
+                <span class="card-icon">💪</span>
+                Recommended Exercises
+            </h2>
+            <div class="exercise-grid">
+                <div class="exercise-item">
+                    <div class="exercise-emoji">🙆</div>
+                    <div class="exercise-name">Chin Tucks</div>
+                    <p>10 reps every hour</p>
+                </div>
+                <div class="exercise-item">
+                    <div class="exercise-emoji">🤸</div>
+                    <div class="exercise-name">Shoulder Blade Squeezes</div>
+                    <p>15 reps, 3x daily</p>
+                </div>
+                <div class="exercise-item">
+                    <div class="exercise-emoji">🧘</div>
+                    <div class="exercise-name">Doorway Chest Stretch</div>
+                    <p>Hold 30 seconds</p>
+                </div>
+                <div class="exercise-item">
+                    <div class="exercise-emoji">🏋️</div>
+                    <div class="exercise-name">Wall Angels</div>
+                    <p>10 reps slowly</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="content-card center">
+            <h2 class="card-title" style="justify-content: center;">
+                <span class="card-icon">🎯</span>
+                Stay on Track
+            </h2>
+            <div class="card-content">
+                <p>
+                    VertA continuously monitors your posture and provides real-time feedback. 
+                    Keep your cushion connected and check your dashboard for detailed analytics.
+                </p>
+                <a href="dashboard.html" class="cta-button">
+                    View Your Dashboard →
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Video error handling
+        document.addEventListener('DOMContentLoaded', function() {
+            const video = document.getElementById('postureVideo');
+            
+            if (video) {
+                video.addEventListener('error', function(e) {
+                    console.error('Video error:', e);
+                });
+
+                video.addEventListener('loadedmetadata', function() {
+                    console.log('Video loaded successfully');
+                });
+            }
+        });
+    </script>
+</body>
+</html>
